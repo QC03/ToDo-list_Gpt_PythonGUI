@@ -2,14 +2,16 @@ import tkinter as tk
 import tasks
 from ui import TodoUI
 
-def on_close():
-    tasks.save_tasks(task_list)
-    root.destroy()
+def main():
+    root = tk.Tk()
+    tasks_list = tasks.load_tasks()
+
+    def on_close():
+        tasks.save_tasks(tasks_list)
+        root.destroy()
+
+    TodoUI(root, tasks_list, on_close)
+    root.mainloop()
 
 if __name__ == "__main__":
-    task_list = tasks.load_tasks()
-
-    root = tk.Tk()
-    ui = TodoUI(root, task_list, on_close)
-
-    root.mainloop()
+    main()
