@@ -1,12 +1,17 @@
 import tkinter as tk
+from tkinter import font
 from tkinter import messagebox
 from tkcalendar import DateEntry
 from datetime import datetime
 import tasks
 
-bgColor = "#1f1f1f"
-fgColor = "#eeeeee"
-list_bg = "#2a2a2a"
+bgColor = "#ADD8E6"
+fgColor = "#4B89DC"
+list_bg = "#DAE5E9"
+
+btn_Font = ("온글잎 박다현체 Regular", 14)
+lbl_Font = ("온글잎 박다현체 Regular", 20)
+ipt_Font = ("온글잎 박다현체 Regular", 14)
 
 class TodoUI:
     def __init__(self, root, tasks_list, on_close):
@@ -28,16 +33,17 @@ class TodoUI:
         input_frame = tk.Frame(root, bg=bgColor)
         input_frame.pack(pady=10)
 
-        tk.Label(input_frame, text="할 일:", bg=bgColor, fg=fgColor).grid(row=0, column=0)
-        self.entry_task = tk.Entry(input_frame, width=30, font=("맑은 고딕", 12),
+        tk.Label(input_frame, text="할 일:", bg=bgColor, fg=fgColor, font=lbl_Font).grid(row=0, column=0)
+        self.entry_task = tk.Entry(input_frame, width=25, font=ipt_Font,
                                    bg=list_bg, fg=fgColor, insertbackground=fgColor)
-        self.entry_task.grid(row=0, column=1, padx=5)
+        self.entry_task.grid(row=0, column=1)
 
         self.calendar_locked = True
-        tk.Button(input_frame, text="날짜선택 토글", command=self.toggle_calendar).grid(row=1, column=0, pady=4)
+        tk.Button(input_frame, text="날짜 선택", font=btn_Font,
+                  width=12, height=1, command=self.toggle_calendar).grid(row=1, column=0, pady=10)
 
         self.entry_date = DateEntry(
-            input_frame, width=27, date_pattern='yyyy-mm-dd',
+            input_frame, width=30, date_pattern='yyyy-mm-dd',
             background=bgColor, foreground=fgColor,
             normalbackground=list_bg, normalforeground=fgColor,
             weekendbackground=list_bg, weekendforeground=fgColor,
@@ -46,29 +52,29 @@ class TodoUI:
         )
         self.entry_date.set_date(datetime.today())
         self.entry_date.configure(state="disabled")
-        self.entry_date.grid(row=1, column=1, padx=5)
+        self.entry_date.grid(row=1, column=1, padx=5, pady=10)
 
-        tk.Button(input_frame, text="할 일 추가", command=self.add_task).grid(row=2, column=0, columnspan=2, pady=10)
+        tk.Button(input_frame, text="할 일 추가", padx="10", font=btn_Font, width=15, height=1, command=self.add_task).grid(row=2, column=0, columnspan=2, pady=5)
 
-        self.btn_toggle_move = tk.Button(root, text="위치 이동 허용", command=self.toggle_move)
-        self.btn_toggle_move.pack(pady=5)
+        self.btn_toggle_move = tk.Button(root, text="위치 이동 허용", padx="10", font=btn_Font, width=15, height=1, command=self.toggle_move)
+        self.btn_toggle_move.pack(pady=10)
 
         # 리스트 영역
         self.listboxes = {}
 
         for name, title in zip(["today", "no_date", "future"],
-                               ["오늘 해야 할 일", "날짜 미지정 할 일", "미래 할 일 (D-n)"]):
-            tk.Label(root, text=title, bg=bgColor, fg=fgColor, font=("맑은 고딕", 11, "bold")).pack()
-            lb = tk.Listbox(root, width=60, height=8, font=("맑은 고딕", 12),
-                            bg=list_bg, fg=fgColor, selectbackground="#444", activestyle="none")
+                               ["†오늘 해야 할 일†", "†날짜 미지정 할 일†", "†미래 할 일†"]):
+            tk.Label(root, text=title, bg=bgColor, fg=fgColor, font=lbl_Font).pack()
+            lb = tk.Listbox(root, width=60, height=8, font=ipt_Font,
+                            bg=list_bg, fg=fgColor, selectbackground="#B0C5CC", activestyle="none")
             lb.pack(pady=(0, 10))
             self.listboxes[name] = lb
 
         # 버튼 영역
         btn_frame = tk.Frame(root, bg=bgColor)
         btn_frame.pack(pady=5)
-        tk.Button(btn_frame, text="완료 토글", command=self.mark_done, width=12).pack(side=tk.LEFT, padx=10)
-        tk.Button(btn_frame, text="삭제", command=self.delete_task, width=12).pack(side=tk.LEFT, padx=10)
+        tk.Button(btn_frame, text="완료", font=btn_Font, command=self.mark_done, width=15, height=1).pack(side=tk.LEFT, padx=10)
+        tk.Button(btn_frame, text="삭제", font=btn_Font, command=self.delete_task, width=15, height=1).pack(side=tk.LEFT, padx=10)
 
         self.update_listboxes()
         self.root.protocol("WM_DELETE_WINDOW", self.close)
@@ -118,7 +124,7 @@ class TodoUI:
 
         for idx, t in enumerate(self.tasks):
             date_str = t["date"]
-            done = "[완료] " if t["done"] else ""
+            done = "[완료] " if t["done"] else " ♤ "
             label = f"{done}{t['task']}"
 
             if date_str == "1900-01-01":
@@ -131,6 +137,9 @@ class TodoUI:
                         self.listboxes["today"].insert(tk.END, label)
                     elif delta > 0:
                         d_label = f"D-{delta} {label}"
+                        self.listboxes["future"].insert(tk.END, d_label)
+                    else:
+                        d_label = f"D+{abs(delta)} {label}"
                         self.listboxes["future"].insert(tk.END, d_label)
                 except:
                     self.listboxes["no_date"].insert(tk.END, label)
@@ -182,7 +191,7 @@ class TodoUI:
                 filtered.append(t)
             elif list_type == "no_date" and t["date"] == "1900-01-01":
                 filtered.append(t)
-            elif list_type == "future" and delta and delta > 0:
+            elif list_type == "future" and delta:
                 filtered.append(t)
         return filtered
 
@@ -194,4 +203,4 @@ class TodoUI:
 
     def close(self):
         tasks.save_window_pos(self.root.winfo_x(), self.root.winfo_y())
-        self.on_close()
+        self.on_close(self.tasks)

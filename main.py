@@ -6,8 +6,8 @@ def main():
     root = tk.Tk()
     tasks_list = tasks.load_tasks()
 
-    def on_close():
-        tasks.save_tasks(tasks_list)
+    def on_close(task_list):
+        tasks.save_tasks(task_list)
         root.destroy()
 
     TodoUI(root, tasks_list, on_close)
